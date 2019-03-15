@@ -45,6 +45,7 @@ INSTALL_BIN_DIR=getenv("Z3_INSTALL_BIN_DIR", "bin")
 INSTALL_LIB_DIR=getenv("Z3_INSTALL_LIB_DIR", "lib")
 INSTALL_INCLUDE_DIR=getenv("Z3_INSTALL_INCLUDE_DIR", "include")
 INSTALL_PKGCONFIG_DIR=getenv("Z3_INSTALL_PKGCONFIG_DIR", os.path.join(INSTALL_LIB_DIR, 'pkgconfig'))
+SANITIZE=getenv("SANITIZE", False)
 
 CXX_COMPILERS=['g++', 'clang++']
 C_COMPILERS=['gcc', 'clang']
@@ -552,6 +553,12 @@ def find_c_compiler():
             return CC
     raise MKException('C compiler was not found. Try to set the environment variable CC with the C compiler available in your system.')
 
+def is_clang():
+    return CC == 'clang' or CXX == 'clang++'
+
+def is_gcc():
+    return CC == 'gcc' or CXX == 'g++'
+
 def set_version(major, minor, build, revision):
     global VER_MAJOR, VER_MINOR, VER_BUILD, VER_REVISION, GIT_DESCRIBE
     VER_MAJOR = major
@@ -683,6 +690,7 @@ def display_help(exit_code):
         print("  --gprof                       enable gprof")
     print("  --noomp                       disable OpenMP and all features that require it.")
     print("  --log-sync                    synchronize access to API log files to enable multi-thread API logging.")
+    print("  --sanitize                    enable ubsan/asan.")
     print("")
     print("Some influential environment variables:")
     if not IS_WINDOWS:
@@ -709,14 +717,14 @@ def display_help(exit_code):
 def parse_options():
     global VERBOSE, DEBUG_MODE, IS_WINDOWS, VS_X64, ONLY_MAKEFILES, SHOW_CPPS, VS_PROJ, TRACE, VS_PAR, VS_PAR_NUM
     global DOTNET_ENABLED, DOTNET_CORE_ENABLED, DOTNET_KEY_FILE, JAVA_ENABLED, ML_ENABLED, JS_ENABLED, STATIC_LIB, STATIC_BIN, PREFIX, GMP, PYTHON_PACKAGE_DIR, GPROF, GIT_HASH, GIT_DESCRIBE, PYTHON_INSTALL_ENABLED, PYTHON_ENABLED, ESRP_SIGN
-    global LINUX_X64, SLOW_OPTIMIZE, USE_OMP, LOG_SYNC
+    global LINUX_X64, SLOW_OPTIMIZE, USE_OMP, SANITIZE, LOG_SYNC
     global GUARD_CF, ALWAYS_DYNAMIC_BASE
     try:
         options, remainder = getopt.gnu_getopt(sys.argv[1:],
                                                'b:df:sxhmcvtnp:gj',
                                                ['build=', 'debug', 'silent', 'x64', 'help', 'makefiles', 'showcpp', 'vsproj', 'guardcf',
                                                 'trace', 'dotnet', 'dotnetcore', 'dotnet-key=', 'esrp', 'staticlib', 'prefix=', 'gmp', 'java', 'parallel=', 'gprof', 'js',
-                                                'githash=', 'git-describe', 'x86', 'ml', 'optimize', 'noomp', 'pypkgdir=', 'python', 'staticbin', 'log-sync'])
+                                                'githash=', 'git-describe', 'x86', 'ml', 'optimize', 'noomp', 'sanitize', 'pypkgdir=', 'python', 'staticbin', 'log-sync'])
     except:
         print("ERROR: Invalid command line option")
         display_help(1)
@@ -784,6 +792,8 @@ def parse_options():
             JS_ENABLED = True
         elif opt in ('', '--noomp'):
             USE_OMP = False
+        elif opt in ('', '--sanitize'):
+            SANITIZE = True
         elif opt in ('', '--log-sync'):
             LOG_SYNC = True
         elif opt in ('--python'):
@@ -2672,7 +2682,7 @@ def mk_config():
     if ONLY_MAKEFILES:
         return
     config = open(os.path.join(BUILD_DIR, 'config.mk'), 'w')
-    global CXX, CC, GMP, CPPFLAGS, CXXFLAGS, LDFLAGS, EXAMP_DEBUG_FLAG, FPMATH_FLAGS, HAS_OMP, LOG_SYNC
+    global CXX, CC, GMP, CPPFLAGS, CXXFLAGS, LDFLAGS, EXAMP_DEBUG_FLAG, FPMATH_FLAGS, HAS_OMP, SANITIZE, LOG_SYNC
     if IS_WINDOWS:
         config.write(
             'CC=cl\n'
@@ -2699,6 +2709,13 @@ def mk_config():
             extra_opt = ' /D_NO_OMP_'
         if HAS_OMP and LOG_SYNC:
             extra_opt = '%s /DZ3_LOG_SYNC' % extra_opt
+        if SANITIZE:
+            if is_clang():
+                extra_opt = ' %s /fsanitize:undefined' % extra_opt
+            elif is_gcc():
+                extra_opt = ' %s /fsanitize:address /fno-omit-frame-pointer' % extra_opt
+            else:
+                raise MKException('no sanitizer found for this compiler')
         if GIT_HASH:
             extra_opt = ' %s /D Z3GITHASH=%s' % (extra_opt, GIT_HASH)
         if GUARD_CF:
@@ -2792,6 +2809,14 @@ def mk_config():
             CPPFLAGS = '%s -D_MP_INTERNAL' % CPPFLAGS
         if GIT_HASH:
             CPPFLAGS = '%s -DZ3GITHASH=%s' % (CPPFLAGS, GIT_HASH)
+        if SANITIZE:
+            if is_clang():
+                CPPFLAGS = '%s -fsanitize=undefined' % CPPFLAGS
+            elif is_gcc():
+                CPPFLAGS = '%s -fsanitize=address -fno-omit-frame-pointer' % CPPFLAGS
+                LDFLAGS = ' %s -static-libasan' % LDFLAGS
+            else:
+                raise MKException('no sanitizer found for this compiler')
         CXXFLAGS = '%s -std=c++11' % CXXFLAGS
         CXXFLAGS = '%s -fvisibility=hidden -c' % CXXFLAGS
         FPMATH = test_fpmath(CXX)
