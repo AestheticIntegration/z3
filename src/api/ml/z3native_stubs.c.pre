@@ -294,7 +294,9 @@ static struct custom_operations Z3_ast_plus_custom_ops = {
   Z3_ast_compare_ext
 };
 
-MK_CTX_OF(ast, 16000) // let's say 16 bytes per ast
+#define HEAVY_FACTOR (1000 * 1000)
+
+MK_CTX_OF(ast, 16 * HEAVY_FACTOR) // let's say 16 bytes per ast
 
 #define MK_PLUS_OBJ_NO_REF(X, USED)                                \
   typedef struct {                                                      \
@@ -410,25 +412,25 @@ MK_CTX_OF(ast, 16000) // let's say 16 bytes per ast
                                                                         \
   MK_CTX_OF(X, USED)
 
-MK_PLUS_OBJ_NO_REF(symbol, 32000)
-MK_PLUS_OBJ_NO_REF(constructor, 32000)
-MK_PLUS_OBJ_NO_REF(constructor_list, 32000)
-MK_PLUS_OBJ_NO_REF(rcf_num, 32000)
-MK_PLUS_OBJ(params, 128000)
-MK_PLUS_OBJ(param_descrs, 128000)
-MK_PLUS_OBJ(model, 512000)
-MK_PLUS_OBJ(func_interp, 128000)
-MK_PLUS_OBJ(func_entry, 128000)
-MK_PLUS_OBJ(goal, 128000)
-MK_PLUS_OBJ(tactic, 128000)
-MK_PLUS_OBJ(probe, 128000)
+MK_PLUS_OBJ_NO_REF(symbol, 32 * HEAVY_FACTOR)
+MK_PLUS_OBJ_NO_REF(constructor, 32 * HEAVY_FACTOR)
+MK_PLUS_OBJ_NO_REF(constructor_list, 32 * HEAVY_FACTOR)
+MK_PLUS_OBJ_NO_REF(rcf_num, 32 * HEAVY_FACTOR)
+MK_PLUS_OBJ(params, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(param_descrs, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(model, 512 * HEAVY_FACTOR)
+MK_PLUS_OBJ(func_interp, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(func_entry, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(goal, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(tactic, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(probe, 128 * HEAVY_FACTOR)
 MK_PLUS_OBJ(apply_result, 128)
-MK_PLUS_OBJ(solver, 20 * 1000 * 1000) // pretend a solver is 20MB
-MK_PLUS_OBJ(stats, 128000)
-MK_PLUS_OBJ(ast_map, 1024 * 2 * 1000)
-MK_PLUS_OBJ(ast_vector, 128 * 1000)
-MK_PLUS_OBJ(fixedpoint, 20 * 1000 * 1000)
-MK_PLUS_OBJ(optimize, 20 * 1000 * 1000)
+MK_PLUS_OBJ(solver, 20 * 1000 * 1000 * HEAVY_FACTOR) // pretend a solver is 20MB
+MK_PLUS_OBJ(stats, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(ast_map, 1024 * 2 * HEAVY_FACTOR)
+MK_PLUS_OBJ(ast_vector, 128 * HEAVY_FACTOR)
+MK_PLUS_OBJ(fixedpoint, 20 * 1000 * HEAVY_FACTOR)
+MK_PLUS_OBJ(optimize, 20 * 1000 * HEAVY_FACTOR)
 
 #ifdef __cplusplus
 extern "C" {
