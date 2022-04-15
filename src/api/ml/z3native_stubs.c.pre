@@ -295,7 +295,7 @@ static struct custom_operations Z3_ast_plus_custom_ops = {
 };
 
 // FUDGE
-MK_CTX_OF(ast, 8) // let's say 16 bytes per ast
+MK_CTX_OF(ast, 4)
 
 #define MK_PLUS_OBJ_NO_REF(X, USED)                                \
   typedef struct {                                                      \
@@ -412,13 +412,13 @@ MK_CTX_OF(ast, 8) // let's say 16 bytes per ast
   MK_CTX_OF(X, USED)
 
 // FUDGE
-MK_PLUS_OBJ_NO_REF(symbol, 16)
-MK_PLUS_OBJ_NO_REF(constructor, 16)
-MK_PLUS_OBJ_NO_REF(constructor_list, 16)
-MK_PLUS_OBJ_NO_REF(rcf_num, 16)
-MK_PLUS_OBJ(params, 64)
-MK_PLUS_OBJ(param_descrs, 64)
-MK_PLUS_OBJ(model, 64)
+MK_PLUS_OBJ_NO_REF(symbol, 4)
+MK_PLUS_OBJ_NO_REF(constructor, 4)
+MK_PLUS_OBJ_NO_REF(constructor_list, 4)
+MK_PLUS_OBJ_NO_REF(rcf_num, 4)
+MK_PLUS_OBJ(params, 32)
+MK_PLUS_OBJ(param_descrs, 32)
+MK_PLUS_OBJ(model, 32)
 MK_PLUS_OBJ(func_interp, 32)
 MK_PLUS_OBJ(func_entry, 32)
 MK_PLUS_OBJ(goal, 64)
