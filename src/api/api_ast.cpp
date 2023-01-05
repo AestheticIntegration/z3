@@ -137,7 +137,7 @@ extern "C" {
         ast_manager& m = mk_c(c)->m();
         recfun::decl::plugin& p = mk_c(c)->recfun().get_plugin();
         if (!p.has_def(d)) {
-            std::string msg = "function " + mk_pp(d, m) + " needs to be defined using rec_func_decl";
+            std::string msg = "function " + mk_pp(d, m) + " needs to be declared using rec_func_decl";
             SET_ERROR_CODE(Z3_INVALID_ARG, msg.c_str());
             return;
         }
@@ -158,6 +158,12 @@ extern "C" {
             SET_ERROR_CODE(Z3_INVALID_ARG, nullptr);
             return;
         }
+        if (!pd.get_def()->get_cases().empty()) {
+            std::string msg = "function " + mk_pp(d, m) + " has already been given a definition";
+            SET_ERROR_CODE(Z3_INVALID_ARG, msg.c_str());
+            return;            
+        }
+                
         if (abs_body->get_sort() != d->get_range()) {
             SET_ERROR_CODE(Z3_INVALID_ARG, nullptr);            
             return;
@@ -1178,7 +1184,7 @@ extern "C" {
             case OP_BSMOD: return Z3_OP_BSMOD;
             case OP_BSDIV0: return Z3_OP_BSDIV0;
             case OP_BUDIV0: return Z3_OP_BUDIV0;
-            case OP_BSREM0: return Z3_OP_BUREM0;
+            case OP_BSREM0: return Z3_OP_BSREM0;
             case OP_BUREM0: return Z3_OP_BUREM0;
             case OP_BSMOD0: return Z3_OP_BSMOD0;
             case OP_ULEQ:   return Z3_OP_ULEQ;

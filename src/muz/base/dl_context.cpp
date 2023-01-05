@@ -53,7 +53,7 @@ namespace datalog {
                 m_limited_size = ctx.get_decl_util().try_get_size(s, m_size);
         }
     public:
-        virtual ~sort_domain() {}
+        virtual ~sort_domain() = default;
 
         sort_kind get_kind() const { return m_kind; }
         virtual unsigned get_constant_count() const = 0;
@@ -644,6 +644,12 @@ namespace datalog {
     }
 
     void context::add_table_fact(func_decl * pred, const table_fact & fact) {
+        if (!is_uninterp(pred)) {
+            std::stringstream strm;
+            strm << "Predicate " << pred->get_name() << " when used for facts should be uninterpreted";        
+            throw default_exception(strm.str());
+        }
+        
         if (get_engine() == DATALOG_ENGINE) {
             ensure_engine();
             m_rel->add_fact(pred, fact);
